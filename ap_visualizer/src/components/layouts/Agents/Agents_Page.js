@@ -3,7 +3,7 @@ import classes from "./Agent_Page.module.css";
 import AgentTable from "./Agent_Table";
 
 import "bootstrap/dist/css/bootstrap.min.css";
-import {clone2DArray, getSpeed, getNextAgentID} from '../../utility/Utility';
+import { clone2DArray, getSpeed, getNextAgentID } from "../../utility/Utility";
 
 const map = require("../../../pathFinding/Map");
 const Cell = require("../../../pathFinding/Cell");
@@ -12,7 +12,7 @@ let interval = null; // the interval created to display the auto-movement of the
 
 function Agents_Page(props) {
   function newAgent() {
-    if (!props.algoFinished){
+    if (!props.algoFinished) {
       alert("Can't add new agent when the algorithm is in-progress!");
       return;
     }
@@ -42,7 +42,7 @@ function Agents_Page(props) {
 
     props.setAlgoFinished(true); // reset the algoFinished to be true;
 
-    const boardCopy = [... props.gridMap];
+    const boardCopy = [...props.gridMap];
     let lastAgent = props.agents[agentId];
     boardCopy[props.agents[agentId].startPoint.row][
       props.agents[agentId].startPoint.col
@@ -81,7 +81,8 @@ function Agents_Page(props) {
       let start_row = props.agents[id].startPoint.row;
       let start_col = props.agents[id].startPoint.col;
       let status = props.agents[id].status;
-      if (status === "Assigned"){ // only added those assigned agent into the algorithm plan;
+      if (status === "Assigned") {
+        // only added those assigned agent into the algorithm plan;
         let end_row = props.agents[id].endPoint.row;
         let end_col = props.agents[id].endPoint.col;
         let agent = {
@@ -89,10 +90,12 @@ function Agents_Page(props) {
           DEST: new Cell(end_row, end_col),
         };
         mp.agents[id] = agent;
-      }
-      else { // for simplicity in case there is some robot in the map has not been assigned with any place -> the algo could not be executed;
-          alert("Please assigned the task for all agents or remove the agent with no assigned task!");
-          return;
+      } else {
+        // for simplicity in case there is some robot in the map has not been assigned with any place -> the algo could not be executed;
+        alert(
+          "Please assigned the task for all agents or remove the agent with no assigned task!"
+        );
+        return;
       }
     }
     props.setAlgoFinished(false); // the algorithm is in executing progress;
@@ -105,7 +108,8 @@ function Agents_Page(props) {
     let paths = algo.solve();
 
     console.log(paths);
-    if (Object.keys(paths).length === 0) { // there is no possible plan;
+    if (Object.keys(paths).length === 0) {
+      // there is no possible plan;
       alert("No possible plan found!");
       props.setAlgoFinished(true);
       return;
@@ -158,10 +162,10 @@ function Agents_Page(props) {
     for (let index in agents) {
       let curAgent = agents[index];
       curAgent.curStep = curStep;
-      if (curStep === curAgent.maxStep-1) {
+      if (curStep === curAgent.maxStep - 1) {
         curAgent.status = "Completed";
       }
-      let clone_agents = {... props.agents};
+      let clone_agents = { ...props.agents };
       clone_agents[curAgent.agentId] = curAgent;
       props.setAgentsList(clone_agents);
     }
@@ -169,25 +173,70 @@ function Agents_Page(props) {
 
   // reset all of the configuration related to current MAPF problem;
   const resetAgents = () => {
-    if (!props.algoFinished){
-        alert("Can't reset the map when the algorithm is executed!");
-        return;
+    if (!props.algoFinished) {
+      alert("Can't reset the map when the algorithm is executed!");
+      return;
     }
     props.setAgentsList({}); // reset the list of the agent to empty;
     props.setAgentPaths({}); // reset the agent path;
-    let originalGridMap = [... props.gridMap];
-    for (let row = 0; row < originalGridMap.length; row++){
-      for (let col = 0; col < originalGridMap[0].length; col++){
-        if (originalGridMap[row][col] === "@"){
+    let originalGridMap = [...props.gridMap];
+    for (let row = 0; row < originalGridMap.length; row++) {
+      for (let col = 0; col < originalGridMap[0].length; col++) {
+        if (originalGridMap[row][col] === "@") {
           continue;
-        }
-        else{
+        } else {
           originalGridMap[row][col] = ".";
         }
       }
     }
     props.mapping(originalGridMap); // reset the gridmap to the original version;
-  }
+  };
+
+  const addRandomFiveAgents = () => {
+    if (!props.algoFinished) {
+      alert("Can't add agents when the algorithm is executed!");
+      return;
+    }
+    let originalGridMap = [...props.gridMap];
+    let agents = { ...props.agents };
+    let agentId = 0;
+    for (let i = 0; i < 5; i++) {
+      let sPosition = getRandomStartPoint(originalGridMap);
+      let ePosition = getRandomEndPoint(originalGridMap);
+      let agent = {
+        agentId: agentId,
+        startPoint: sPosition,
+        endPoint: ePosition,
+        status: "Assigned",
+        path: [],
+        curStep: 0,
+        maxStep: 0,
+      };
+      agents[agentId] = agent;
+      agentId += 1;
+    }
+    props.setAgentsList(agents);
+  };
+
+  const getRandomStartPoint = (gridMap) => {
+    let row = Math.floor(Math.random() * gridMap.length);
+    let col = Math.floor(Math.random() * gridMap[0].length);
+    while (gridMap[row][col] !== ".") {
+      row = Math.floor(Math.random() * gridMap.length);
+      col = Math.floor(Math.random() * gridMap[0].length);
+    }
+    return { row: row, col: col };
+  };
+
+  const getRandomEndPoint = (gridMap) => {
+    let row = Math.floor(Math.random() * gridMap.length);
+    let col = Math.floor(Math.random() * gridMap[0].length);
+    while (gridMap[row][col] !== ".") {
+      row = Math.floor(Math.random() * gridMap.length);
+      col = Math.floor(Math.random() * gridMap[0].length);
+    }
+    return { row: row, col: col };
+  };
 
   return (
     <>
@@ -212,6 +261,9 @@ function Agents_Page(props) {
       </button>
       <button className={classes.btn} onClick={resetAgents}>
         Reset
+      </button>
+      <button className={classes.btn} onClick={addRandomFiveAgents}>
+        Add Random 5 Agents
       </button>
     </>
   );
